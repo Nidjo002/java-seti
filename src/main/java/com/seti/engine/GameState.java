@@ -49,10 +49,6 @@ public class GameState implements Serializable {
         currentPhase = new SimpleObjectProperty<>((GamePhase) in.readObject());
     }
 
-    public void startGame() {
-        currentPhase.set(GamePhase.PLAYER_TURN);
-    }
-
     public Player getCurrentPlayer() {
         return players.get(currentPlayerIndex.get());
     }

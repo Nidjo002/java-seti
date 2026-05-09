@@ -7,6 +7,7 @@ import com.seti.engine.action.*;
 import com.seti.model.GameConfig;
 import com.seti.model.Player;
 import com.seti.model.TrailType;
+import com.seti.utils.GameSerializerUtil;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
@@ -152,10 +153,33 @@ public class GameController {
     @FXML private void onTradeCE() { executeAction(tradeCE); }
     @FXML private void onEndTurn() { executeAction(endTurnAction); }
 
-    @FXML private void onSave() {}
-    @FXML private void onLoad() {}
+    @FXML private void onSave() {
+        GameSerializerUtil.createGameSaveFile(engine.getState());
+        log("Game saved.");
+    }
+    @FXML private void onLoad() {
+        GameState state = GameSerializerUtil.loadGameSaveFile();
+        if (state == null) return;
+        engine = new GameEngine(state);
+        backgroundCanvas.drawBoard(state.getCells());
+        dynamicBoardCanvas.draw(state);
+        bindProperties();
+        updateButtons();
+        log("Game loaded.");
+    }
+    @FXML private void onNewGame() {
+        GameState state = GameSerializerUtil.newGame();
+        engine = new GameEngine(state);
+        backgroundCanvas.drawBoard(state.getCells());
+        dynamicBoardCanvas.clearSelection();
+        dynamicBoardCanvas.draw(state);
+        bindProperties();
+        updateButtons();
+        logArea.clear();
+        log("New game started.");
+    }
     @FXML private void onExit() { javafx.application.Platform.exit(); }
-    @FXML private void onRules() {}
+    @FXML private void onRules() { /* TODO load rules. */ }
     @FXML private void onSendChat() {
         String message = chatInput.getText().trim();
         if (!message.isEmpty()) {

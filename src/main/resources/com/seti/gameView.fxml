@@ -2,6 +2,8 @@
 
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.control.*?>
+<?import com.seti.ui.BackgroundCanvas?>
+<?import com.seti.ui.DynamicBoardCanvas?>
 
 <BorderPane xmlns:fx="http://javafx.com/fxml"
             fx:controller="com.seti.ui.GameController"
@@ -10,6 +12,8 @@
     <top>
         <MenuBar styleClass="menu-bar">
             <Menu text="File">
+                <MenuItem text="New Game" onAction="#onNewGame"/>
+                <SeparatorMenuItem/>
                 <MenuItem text="Save Game" onAction="#onSave"/>
                 <MenuItem text="Load Game" onAction="#onLoad"/>
                 <SeparatorMenuItem/>
@@ -23,8 +27,8 @@
 
     <center>
         <StackPane>
-            <com.seti.ui.BackgroundCanvas fx:id="backgroundCanvas"/>
-            <com.seti.ui.DynamicBoardCanvas fx:id="dynamicBoardCanvas"/>
+            <BackgroundCanvas fx:id="backgroundCanvas"/>
+            <DynamicBoardCanvas fx:id="dynamicBoardCanvas"/>
         </StackPane>
     </center>
 

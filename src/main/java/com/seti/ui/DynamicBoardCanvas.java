@@ -137,22 +137,31 @@ public class DynamicBoardCanvas extends Canvas {
         if (lastState == null) return;
         double cx = getWidth() / 2;
         double cy = getHeight() / 2;
-        for (int ring = 1; ring <= GameConfig.NUM_RINGS; ring++) {
-            for (int sector = 1; sector <= GameConfig.NUM_SECTORS; sector++) {
-                double[] pos = BoardGeometry.getCellPosition(ring, sector, cx, cy);
-                double dx = event.getX() - pos[0];
-                double dy = event.getY() - pos[1];
-                if (Math.sqrt(dx * dx + dy * dy) <= BoardGeometry.CELL_RADIUS + 5) {
-                    selectedRing = ring;
-                    selectedSector = sector;
-                    draw(lastState);
-                    if (onCellSelected != null) {
-                        onCellSelected.accept(selectedRing, selectedSector);
-                    }
-                    return;
-                }
+
+        double dx = event.getX() - cx;
+        double dy = event.getY() - cy;
+        double dist = Math.sqrt(dx * dx + dy * dy);
+
+
+        int ring = (int) Math.round((dist - BoardGeometry.SUN_RADIUS) / BoardGeometry.RING_GAP);
+
+
+        double angle = Math.atan2(dy, dx);
+        if (angle < 0) angle += 2 * Math.PI;
+        int sector = (int) (angle / (2 * Math.PI / GameConfig.NUM_SECTORS)) + 1;
+
+
+        if (ring >= 1 && ring <= GameConfig.NUM_RINGS && sector >= 1 && sector <= GameConfig.NUM_SECTORS) {
+            double[] pos = BoardGeometry.getCellPosition(ring, sector, cx, cy);
+            if (Math.hypot(event.getX() - pos[0], event.getY() - pos[1]) <= BoardGeometry.CELL_RADIUS + 5) {
+                selectedRing = ring;
+                selectedSector = sector;
+                draw(lastState);
+                if (onCellSelected != null) onCellSelected.accept(selectedRing, selectedSector);
+                return;
             }
         }
+
         clearSelection();
         draw(lastState);
     }
