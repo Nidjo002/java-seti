@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.control.*?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.seti.ui.GameController"
+            stylesheets="@style.css">
+
+    <top>
+        <MenuBar styleClass="menu-bar">
+            <Menu text="File">
+                <MenuItem text="Save Game" onAction="#onSave"/>
+                <MenuItem text="Load Game" onAction="#onLoad"/>
+                <SeparatorMenuItem/>
+                <MenuItem text="Exit" onAction="#onExit"/>
+            </Menu>
+            <Menu text="Help">
+                <MenuItem text="Rules" onAction="#onRules"/>
+            </Menu>
+        </MenuBar>
+    </top>
+
+    <center>
+        <StackPane>
+            <com.seti.ui.BackgroundCanvas fx:id="backgroundCanvas"/>
+            <com.seti.ui.DynamicBoardCanvas fx:id="dynamicBoardCanvas"/>
+        </StackPane>
+    </center>
+
+    <right>
+        <VBox styleClass="side-panel">
+
+            <HBox styleClass="top-info-bar" spacing="30">
+                <VBox spacing="2">
+                    <Label text="ROUND" styleClass="section-label"/>
+                    <HBox spacing="6" alignment="CENTER_LEFT">
+                        <Label fx:id="roundNumberLabel" text="1" styleClass="round-number"/>
+                        <Label fx:id="roundTotalLabel" text="/ 5" styleClass="round-total"/>
+                    </HBox>
+                </VBox>
+                <VBox spacing="2">
+                    <Label text="PLAYER" styleClass="section-label"/>
+                    <Label fx:id="currentPlayerLabel" text="Player 1" styleClass="player-name"/>
+                </VBox>
+            </HBox>
+
+            <Separator styleClass="divider"/>
+
+            <Label text="RESOURCES" styleClass="section-label"/>
+            <HBox spacing="8">
+                <VBox styleClass="resource-card" HBox.hgrow="ALWAYS">
+                    <Label fx:id="creditsLabel" text="5" styleClass="resource-value"/>
+                    <Label text="Credits" styleClass="resource-name"/>
+                </VBox>
+                <VBox styleClass="resource-card" HBox.hgrow="ALWAYS">
+                    <Label fx:id="energyLabel" text="5" styleClass="resource-value"/>
+                    <Label text="Energy" styleClass="resource-name"/>
+                </VBox>
+                <VBox styleClass="resource-card" HBox.hgrow="ALWAYS">
+                    <Label fx:id="dataTokensLabel" text="0" styleClass="resource-value"/>
+                    <Label text="Data" styleClass="resource-name"/>
+                </VBox>
+            </HBox>
+
+            <Separator styleClass="divider"/>
+
+            <HBox spacing="8">
+                <VBox styleClass="score-card" HBox.hgrow="ALWAYS">
+                    <Label text="VP" styleClass="score-label"/>
+                    <Label fx:id="vpLabel" text="0" styleClass="score-value"/>
+                </VBox>
+                <VBox styleClass="score-card" HBox.hgrow="ALWAYS">
+                    <Label text="Trails" styleClass="score-label"/>
+                    <Label fx:id="trailsLabel" text="—" styleClass="score-value"/>
+                </VBox>
+            </HBox>
+
+            <Separator styleClass="divider"/>
+
+            <Label text="ACTIONS" styleClass="section-label"/>
+            <GridPane hgap="8" vgap="8">
+                <columnConstraints>
+                    <ColumnConstraints percentWidth="50"/>
+                    <ColumnConstraints percentWidth="50"/>
+                </columnConstraints>
+                <Button fx:id="launchButton" text="Launch" onAction="#onLaunch"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+                <Button fx:id="moveButton" text="Move" onAction="#onMove"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="1" GridPane.rowIndex="0"/>
+                <Button fx:id="orbitButton" text="Orbit" onAction="#onOrbit"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+                <Button fx:id="landButton" text="Land" onAction="#onLand"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+                <Button fx:id="scanButton" text="Scan" onAction="#onScan"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+                <Button fx:id="analyzeButton" text="Analyze" onAction="#onAnalyze"
+                        styleClass="action-button" maxWidth="Infinity"
+                        GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+                <Button fx:id="tradeECButton" text="2E → 1C" onAction="#onTradeEC"
+                        styleClass="trade-button" maxWidth="Infinity"
+                        GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+                <Button fx:id="tradeCEButton" text="2C → 1E" onAction="#onTradeCE"
+                        styleClass="trade-button" maxWidth="Infinity"
+                        GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            </GridPane>
+
+            <Button fx:id="endTurnButton" text="End Turn" maxWidth="Infinity"
+                    onAction="#onEndTurn" styleClass="end-turn-button"/>
+
+            <Separator styleClass="divider"/>
+
+            <Label text="LOG" styleClass="section-label"/>
+            <TextArea fx:id="logArea" editable="false" wrapText="true"
+                      promptText="No events yet..."
+                      prefHeight="100" styleClass="log-area"/>
+
+            <Separator styleClass="divider"/>
+
+            <Label text="CHAT" styleClass="section-label"/>
+            <TextArea fx:id="chatArea" editable="false" wrapText="true"
+                      prefHeight="100" styleClass="log-area"/>
+            <HBox spacing="8">
+                <TextField fx:id="chatInput" promptText="Type a message..."
+                           styleClass="chat-input" HBox.hgrow="ALWAYS"/>
+                <Button text="Send" onAction="#onSendChat" styleClass="send-button"/>
+            </HBox>
+
+        </VBox>
+    </right>
+
+</BorderPane>
