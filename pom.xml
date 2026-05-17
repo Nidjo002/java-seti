@@ -49,6 +49,9 @@
                 <configuration>
                     <source>25</source>
                     <target>25</target>
+                    <compilerArgs>
+                        <arg>-parameters</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
             <plugin>

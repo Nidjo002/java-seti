@@ -6,10 +6,7 @@ import com.seti.model.*;
 
 public final class TradeAction implements GameAction {
 
-    public enum TradeDirection {
-        ENERGY_FOR_CREDITS,
-        CREDITS_FOR_ENERGY
-    }
+
 
     private final TradeDirection direction;
 

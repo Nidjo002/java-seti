@@ -5,7 +5,6 @@ import javafx.collections.*;
 
 import java.io.*;
 import java.util.List;
-import java.io.Serial;
 
 public class Player implements Serializable {
 
@@ -13,9 +12,13 @@ public class Player implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private final String name;
+
     private final Resource resources;
+
     private final Probe probe;
+
     private transient IntegerProperty victoryPoints;
+
     private transient ListProperty<TrailType> trails;
 
     public Player(String name) {
@@ -34,6 +37,7 @@ public class Player implements Serializable {
     }
 
     @Serial
+    @SuppressWarnings("unchecked")
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         victoryPoints = new SimpleIntegerProperty(in.readInt());
@@ -56,13 +60,13 @@ public class Player implements Serializable {
         return victoryPoints.get() + trailPoints;
     }
 
-
     public String getName() { return name; }
     public Resource getResources() { return resources; }
     public Probe getProbe() { return probe; }
 
     public IntegerProperty victoryPointsProperty() { return victoryPoints; }
+    public int getVictoryPoints() { return victoryPoints.get(); }
+
     public ListProperty<TrailType> trailsProperty() { return trails; }
-
-
+    public List<TrailType> getTrails() { return trails.get(); }
 }

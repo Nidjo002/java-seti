@@ -1,4 +1,4 @@
-package com.seti.ui;
+package com.seti;
 
 import com.seti.engine.GameEngine;
 import com.seti.engine.GameInitializer;
@@ -7,15 +7,25 @@ import com.seti.engine.action.*;
 import com.seti.model.GameConfig;
 import com.seti.model.Player;
 import com.seti.model.TrailType;
+import com.seti.ui.BackgroundCanvas;
+import com.seti.ui.DynamicBoardCanvas;
+import com.seti.utils.DocumentationUtils;
 import com.seti.utils.GameSerializerUtil;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import java.awt.*;
+import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.seti.engine.action.TradeAction.TradeDirection.*;
+import static com.seti.engine.action.TradeDirection.CREDITS_FOR_ENERGY;
+import static com.seti.engine.action.TradeDirection.ENERGY_FOR_CREDITS;
+
 
 public class GameController {
 
@@ -75,10 +85,6 @@ public class GameController {
                 )
         );
         bindPlayerProperties(state.getCurrentPlayer());
-        state.currentPlayerIndexProperty().addListener((_, _, _) -> {
-            bindPlayerProperties(state.getCurrentPlayer());
-            updateButtons();
-        });
     }
 
     private void bindPlayerProperties(Player player) {
@@ -86,7 +92,8 @@ public class GameController {
         energyLabel.textProperty().bind(player.getResources().energyProperty().asString());
         dataTokensLabel.textProperty().bind(player.getResources().dataTokensProperty().asString());
         vpLabel.textProperty().bind(player.victoryPointsProperty().asString());
-        trailsLabel.textProperty().bind(Bindings.createStringBinding(
+        trailsLabel.textProperty()
+                .bind(Bindings.createStringBinding(
                 () -> {
                     String trails = player.trailsProperty().stream()
                             .map(TrailType::getDisplayName)
@@ -121,6 +128,7 @@ public class GameController {
         log(result.message());
         dynamicBoardCanvas.clearSelection();
         dynamicBoardCanvas.draw(engine.getState());
+        bindPlayerProperties(engine.getState().getCurrentPlayer());
         updateButtons();
         if (engine.getState().isGameOver()) {
             showGameOver();
@@ -154,19 +162,31 @@ public class GameController {
     @FXML private void onEndTurn() { executeAction(endTurnAction); }
 
     @FXML private void onSave() {
-        GameSerializerUtil.createGameSaveFile(engine.getState());
-        log("Game saved.");
+        try {
+            GameSerializerUtil.createGameSaveFile(engine.getState());
+            log("Game saved.");
+        } catch (IOException e) {
+            log("Failed to save game: " + e.getMessage());
+        }
     }
     @FXML private void onLoad() {
-        GameState state = GameSerializerUtil.loadGameSaveFile();
-        if (state == null) return;
-        engine = new GameEngine(state);
-        backgroundCanvas.drawBoard(state.getCells());
-        dynamicBoardCanvas.draw(state);
-        bindProperties();
-        updateButtons();
-        log("Game loaded.");
+        try {
+            GameSerializerUtil.loadGameSaveFile().ifPresentOrElse(
+                    state -> {
+                        engine = new GameEngine(state);
+                        backgroundCanvas.drawBoard(state.getCells());
+                        dynamicBoardCanvas.draw(state);
+                        bindProperties();
+                        updateButtons();
+                        log("Game loaded.");
+                    },
+                    () -> log("No save file found.")
+            );
+        } catch (IOException | ClassNotFoundException e) {
+            log("Failed to load game: " + e.getMessage());
+        }
     }
+
     @FXML private void onNewGame() {
         GameState state = GameSerializerUtil.newGame();
         engine = new GameEngine(state);
@@ -180,6 +200,7 @@ public class GameController {
     }
     @FXML private void onExit() { javafx.application.Platform.exit(); }
     @FXML private void onRules() { /* TODO load rules. */ }
+    @FXML private void onDocumentation() {DocumentationUtils.openDocumentation();}
     @FXML private void onSendChat() {
         String message = chatInput.getText().trim();
         if (!message.isEmpty()) {
