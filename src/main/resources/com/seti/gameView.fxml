@@ -16,6 +16,7 @@
                 <SeparatorMenuItem/>
                 <MenuItem text="Save Game" onAction="#onSave"/>
                 <MenuItem text="Load Game" onAction="#onLoad"/>
+                <MenuItem text="Watch Replay" onAction="#onWatchReplay"/>
                 <SeparatorMenuItem/>
                 <MenuItem text="Exit" onAction="#onExit"/>
             </Menu>
@@ -124,18 +125,6 @@
             <TextArea fx:id="logArea" editable="false" wrapText="true"
                       promptText="No events yet..."
                       prefHeight="100" styleClass="log-area"/>
-
-            <Separator styleClass="divider"/>
-
-            <Label text="CHAT" styleClass="section-label"/>
-            <TextArea fx:id="chatArea" editable="false" wrapText="true"
-                      prefHeight="100" styleClass="log-area"/>
-            <HBox spacing="8">
-                <TextField fx:id="chatInput" promptText="Type a message..."
-                           styleClass="chat-input" HBox.hgrow="ALWAYS"/>
-                <Button text="Send" onAction="#onSendChat" styleClass="send-button"/>
-            </HBox>
-
         </VBox>
     </right>
 

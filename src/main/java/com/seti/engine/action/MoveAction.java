@@ -16,6 +16,14 @@ public final class MoveAction implements GameAction {
         this.targetSector = targetSector;
     }
 
+    public int getTargetRing() {
+        return targetRing;
+    }
+
+    public int getTargetSector() {
+        return targetSector;
+    }
+
     @Override
     public boolean canExecute(GameState state) {
         Player player = state.getCurrentPlayer();

@@ -14,14 +14,14 @@ import com.seti.utils.GameSerializerUtil;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import java.awt.*;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
+import com.seti.utils.ReplayEntryUtil;
+import com.seti.utils.ReplayUtils;
+import com.seti.utils.XmlUtils;
+import javafx.animation.Timeline;
+import java.util.ArrayList;
 
 import static com.seti.engine.action.TradeDirection.CREDITS_FOR_ENERGY;
 import static com.seti.engine.action.TradeDirection.ENERGY_FOR_CREDITS;
@@ -49,10 +49,9 @@ public class GameController {
     @FXML private Button tradeCEButton;
     @FXML private Button endTurnButton;
     @FXML private TextArea logArea;
-    @FXML private TextArea chatArea;
-    @FXML private TextField chatInput;
 
     private GameEngine engine;
+    private final List<ReplayEntryUtil> replayLog = new ArrayList<>();
 
     private final LaunchAction launchAction = new LaunchAction();
     private final OrbitAction orbitAction = new OrbitAction();
@@ -124,7 +123,12 @@ public class GameController {
     }
 
     private void executeAction(GameAction action) {
+        int playerIndex = engine.getState().currentPlayerIndexProperty().get();
         var result = engine.executeAction(action);
+        if (result.success()) {
+            replayLog.add(new ReplayEntryUtil(playerIndex, action));
+            XmlUtils.saveReplay(replayLog);
+        }
         log(result.message());
         dynamicBoardCanvas.clearSelection();
         dynamicBoardCanvas.draw(engine.getState());
@@ -196,16 +200,32 @@ public class GameController {
         bindProperties();
         updateButtons();
         logArea.clear();
+        replayLog.clear();
         log("New game started.");
     }
     @FXML private void onExit() { javafx.application.Platform.exit(); }
     @FXML private void onRules() { /* TODO load rules. */ }
     @FXML private void onDocumentation() {DocumentationUtils.openDocumentation();}
-    @FXML private void onSendChat() {
-        String message = chatInput.getText().trim();
-        if (!message.isEmpty()) {
-            chatArea.appendText("You: " + message + "\n");
-            chatInput.clear();
+    @FXML private void onWatchReplay() {
+        List<ReplayEntryUtil> entries = XmlUtils.readReplay();
+        if (entries.isEmpty()) {
+            log("No replay to watch.");
+            return;
         }
+        GameState state = GameSerializerUtil.newGame();
+        engine = new GameEngine(state);
+        backgroundCanvas.drawBoard(state.getCells());
+        dynamicBoardCanvas.clearSelection();
+        dynamicBoardCanvas.draw(state);
+        bindProperties();
+        disableAllButtons();
+        log("Replaying " + entries.size() + " actions...");
+
+        Timeline timeline = ReplayUtils.buildReplay(entries, engine, e -> {
+            dynamicBoardCanvas.draw(e.getState());
+            bindPlayerProperties(e.getState().getCurrentPlayer());
+        });
+        timeline.setOnFinished(e -> log("Replay finished."));
+        timeline.play();
     }
 }

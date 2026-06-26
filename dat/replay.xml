@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Replay>
+  <Action player="0" type="LAUNCH"/>
+  <Action player="0" ring="2" sector="1" type="MOVE"/>
+  <Action player="0" ring="3" sector="1" type="MOVE"/>
+  <Action player="0" type="END_TURN"/>
+  <Action player="1" type="LAUNCH"/>
+  <Action player="1" ring="1" sector="8" type="MOVE"/>
+  <Action player="1" ring="2" sector="8" type="MOVE"/>
+  <Action player="1" type="SCAN"/>
+</Replay>

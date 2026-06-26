@@ -10,6 +10,10 @@ public final class TradeAction implements GameAction {
 
     private final TradeDirection direction;
 
+    public TradeDirection getDirection() {
+        return direction;
+    }
+
     public TradeAction(TradeDirection direction) {
         this.direction = direction;
     }
