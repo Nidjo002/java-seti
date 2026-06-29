@@ -1,31 +1,27 @@
 package com.seti;
 
-import com.seti.engine.GameEngine;
-import com.seti.engine.GameInitializer;
-import com.seti.engine.GameState;
+import com.seti.engine.*;
 import com.seti.engine.action.*;
 import com.seti.model.GameConfig;
 import com.seti.model.Player;
 import com.seti.model.TrailType;
 import com.seti.ui.BackgroundCanvas;
 import com.seti.ui.DynamicBoardCanvas;
-import com.seti.utils.DocumentationUtils;
-import com.seti.utils.GameSerializerUtil;
+import com.seti.utils.*;
+import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.*;
+
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import com.seti.utils.ReplayEntryUtil;
-import com.seti.utils.ReplayUtils;
-import com.seti.utils.XmlUtils;
-import javafx.animation.Timeline;
-import java.util.ArrayList;
 
 import static com.seti.engine.action.TradeDirection.CREDITS_FOR_ENERGY;
 import static com.seti.engine.action.TradeDirection.ENERGY_FOR_CREDITS;
-
 
 public class GameController {
 
@@ -51,6 +47,7 @@ public class GameController {
     @FXML private TextArea logArea;
 
     private GameEngine engine;
+    private List<String> playerNames;
     private final List<ReplayEntryUtil> replayLog = new ArrayList<>();
 
     private final LaunchAction launchAction = new LaunchAction();
@@ -64,13 +61,31 @@ public class GameController {
 
     @FXML
     public void initialize() {
-        GameState state = new GameInitializer().initializeGame(List.of("Player 1", "Player 2"));
-        engine = new GameEngine(state);
-        backgroundCanvas.drawBoard(state.getCells());
         dynamicBoardCanvas.setOnCellSelected((ring, sector) -> updateButtons());
+    }
+
+    public void startNewGame(List<String> names) {
+        this.playerNames = names;
+        GameState state = new GameInitializer().initializeGame(names);
+        engine = new GameEngine(state);
+        replayLog.clear();
+        logArea.clear();
+        backgroundCanvas.drawBoard(state.getCells());
+        dynamicBoardCanvas.clearSelection();
         bindProperties();
         dynamicBoardCanvas.draw(state);
         updateButtons();
+        log("New game started: " + String.join(" vs ", names));
+    }
+
+    public void loadState(GameState state) {
+        engine = new GameEngine(state);
+        backgroundCanvas.drawBoard(state.getCells());
+        dynamicBoardCanvas.clearSelection();
+        bindProperties();
+        dynamicBoardCanvas.draw(state);
+        updateButtons();
+        log("Game loaded.");
     }
 
     private void bindProperties() {
@@ -91,8 +106,7 @@ public class GameController {
         energyLabel.textProperty().bind(player.getResources().energyProperty().asString());
         dataTokensLabel.textProperty().bind(player.getResources().dataTokensProperty().asString());
         vpLabel.textProperty().bind(player.victoryPointsProperty().asString());
-        trailsLabel.textProperty()
-                .bind(Bindings.createStringBinding(
+        trailsLabel.textProperty().bind(Bindings.createStringBinding(
                 () -> {
                     String trails = player.trailsProperty().stream()
                             .map(TrailType::getDisplayName)
@@ -144,6 +158,11 @@ public class GameController {
         log("=== GAME OVER ===");
         log(winner.getName() + " wins with " + winner.calculateFinalScore() + " points!");
         disableAllButtons();
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Game Over");
+        alert.setHeaderText(winner.getName() + " wins!");
+        alert.setContentText("Final score: " + winner.calculateFinalScore() + " victory points.");
+        alert.showAndWait();
     }
 
     private void disableAllButtons() {
@@ -152,18 +171,27 @@ public class GameController {
                 .forEach(b -> b.setDisable(true));
     }
 
-    @FXML private void onLaunch() { executeAction(launchAction); }
+    private void switchToMainMenu() {
+        try {
+            Parent menuRoot = FXMLLoader.load(getClass().getResource("mainMenu.fxml"));
+            logArea.getScene().setRoot(menuRoot);
+        } catch (IOException e) {
+            log("Failed to return to menu: " + e.getMessage());
+        }
+    }
+
+    @FXML private void onLaunch()   { executeAction(launchAction); }
     @FXML private void onMove() {
         executeAction(new MoveAction(dynamicBoardCanvas.getSelectedRing(),
                 dynamicBoardCanvas.getSelectedSector()));
     }
-    @FXML private void onOrbit() { executeAction(orbitAction); }
-    @FXML private void onLand() { executeAction(landAction); }
-    @FXML private void onScan() { executeAction(scanAction); }
-    @FXML private void onAnalyze() { executeAction(analyzeAction); }
-    @FXML private void onTradeEC() { executeAction(tradeEC); }
-    @FXML private void onTradeCE() { executeAction(tradeCE); }
-    @FXML private void onEndTurn() { executeAction(endTurnAction); }
+    @FXML private void onOrbit()    { executeAction(orbitAction); }
+    @FXML private void onLand()     { executeAction(landAction); }
+    @FXML private void onScan()     { executeAction(scanAction); }
+    @FXML private void onAnalyze()  { executeAction(analyzeAction); }
+    @FXML private void onTradeEC()  { executeAction(tradeEC); }
+    @FXML private void onTradeCE()  { executeAction(tradeCE); }
+    @FXML private void onEndTurn()  { executeAction(endTurnAction); }
 
     @FXML private void onSave() {
         try {
@@ -173,59 +201,31 @@ public class GameController {
             log("Failed to save game: " + e.getMessage());
         }
     }
+
     @FXML private void onLoad() {
         try {
-            GameSerializerUtil.loadGameSaveFile().ifPresentOrElse(
-                    state -> {
-                        engine = new GameEngine(state);
-                        backgroundCanvas.drawBoard(state.getCells());
-                        dynamicBoardCanvas.draw(state);
-                        bindProperties();
-                        updateButtons();
-                        log("Game loaded.");
-                    },
-                    () -> log("No save file found.")
-            );
+            GameSerializerUtil.loadGameSaveFile()
+                    .ifPresentOrElse(this::loadState, () -> log("No save file found."));
         } catch (IOException | ClassNotFoundException e) {
             log("Failed to load game: " + e.getMessage());
         }
     }
 
-    @FXML private void onNewGame() {
-        GameState state = GameSerializerUtil.newGame();
-        engine = new GameEngine(state);
-        backgroundCanvas.drawBoard(state.getCells());
-        dynamicBoardCanvas.clearSelection();
-        dynamicBoardCanvas.draw(state);
-        bindProperties();
-        updateButtons();
-        logArea.clear();
-        replayLog.clear();
-        log("New game started.");
-    }
-    @FXML private void onExit() { javafx.application.Platform.exit(); }
-    @FXML private void onRules() { /* TODO load rules. */ }
-    @FXML private void onDocumentation() {DocumentationUtils.openDocumentation();}
-    @FXML private void onWatchReplay() {
+    @FXML private void onNewGame()       { switchToMainMenu(); }
+    @FXML private void onExit()          { javafx.application.Platform.exit(); }
+    @FXML private void onDocumentation() { DocumentationUtils.openDocumentation(); }
+
+    @FXML public void onWatchReplay() {
         List<ReplayEntryUtil> entries = XmlUtils.readReplay();
-        if (entries.isEmpty()) {
-            log("No replay to watch.");
-            return;
-        }
-        GameState state = GameSerializerUtil.newGame();
-        engine = new GameEngine(state);
-        backgroundCanvas.drawBoard(state.getCells());
-        dynamicBoardCanvas.clearSelection();
-        dynamicBoardCanvas.draw(state);
-        bindProperties();
+        if (entries.isEmpty()) { log("No replay to watch."); return; }
+        startNewGame(playerNames);
         disableAllButtons();
         log("Replaying " + entries.size() + " actions...");
-
-        Timeline timeline = ReplayUtils.buildReplay(entries, engine, e -> {
+        Timeline tl = ReplayUtils.buildReplay(entries, engine, e -> {
             dynamicBoardCanvas.draw(e.getState());
             bindPlayerProperties(e.getState().getCurrentPlayer());
         });
-        timeline.setOnFinished(e -> log("Replay finished."));
-        timeline.play();
+        tl.setOnFinished(e -> log("Replay finished."));
+        tl.play();
     }
 }

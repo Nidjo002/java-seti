@@ -22,7 +22,6 @@
             </Menu>
             <Menu text="Help">
                 <MenuItem text="Documentation" onAction="#onDocumentation"/>
-                <MenuItem text="Rules" onAction="#onRules"/>
             </Menu>
         </MenuBar>
     </top>

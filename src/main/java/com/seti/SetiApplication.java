@@ -16,11 +16,11 @@ public class SetiApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         FXMLLoader loader = new FXMLLoader(
-                getClass().getResource("gameView.fxml"));
+                getClass().getResource("mainMenu.fxml"));
         Scene scene = new Scene(loader.load(), WINDOW_WIDTH, WINDOW_HEIGHT);
         stage.setTitle(TITLE);
         stage.setScene(scene);
-        stage.setResizable(false);
+        stage.setMaximized(true);
         stage.show();
     }
 

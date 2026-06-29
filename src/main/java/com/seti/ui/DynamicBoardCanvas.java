@@ -24,7 +24,8 @@ public class DynamicBoardCanvas extends Canvas {
 
     private static final double STAR_RADIUS = 26.0;
     private static final double PROBE_SIZE = 28.0;
-    private static final double DEFAULT_SIZE = 900.0;
+    private static final double CANVAS_WIDTH = 1400.0;
+    private static final double CANVAS_HEIGHT = 900.0;
 
     private final Image[] probeImages;
 
@@ -34,11 +35,7 @@ public class DynamicBoardCanvas extends Canvas {
     private BiConsumer<Integer, Integer> onCellSelected;
 
     public DynamicBoardCanvas() {
-        this(DEFAULT_SIZE, DEFAULT_SIZE);
-    }
-
-    public DynamicBoardCanvas(double width, double height) {
-        super(width, height);
+        super(CANVAS_WIDTH, CANVAS_HEIGHT);
         this.probeImages = new Image[]{
                 new Image(Objects.requireNonNull(
                         getClass().getResourceAsStream("/com/seti/images/probe1.png"))),
@@ -142,18 +139,17 @@ public class DynamicBoardCanvas extends Canvas {
         double dy = event.getY() - cy;
         double dist = Math.sqrt(dx * dx + dy * dy);
 
-
         int ring = (int) Math.round((dist - BoardGeometry.SUN_RADIUS) / BoardGeometry.RING_GAP);
-
 
         double angle = Math.atan2(dy, dx);
         if (angle < 0) angle += 2 * Math.PI;
         int sector = (int) (angle / (2 * Math.PI / GameConfig.NUM_SECTORS)) + 1;
 
-
-        if (ring >= 1 && ring <= GameConfig.NUM_RINGS && sector >= 1 && sector <= GameConfig.NUM_SECTORS) {
+        if (ring >= 1 && ring <= GameConfig.NUM_RINGS
+                && sector >= 1 && sector <= GameConfig.NUM_SECTORS) {
             double[] pos = BoardGeometry.getCellPosition(ring, sector, cx, cy);
-            if (Math.hypot(event.getX() - pos[0], event.getY() - pos[1]) <= BoardGeometry.CELL_RADIUS + 5) {
+            if (Math.hypot(event.getX() - pos[0], event.getY() - pos[1])
+                    <= BoardGeometry.CELL_RADIUS + 5) {
                 selectedRing = ring;
                 selectedSector = sector;
                 draw(lastState);
@@ -175,7 +171,7 @@ public class DynamicBoardCanvas extends Canvas {
         this.onCellSelected = callback;
     }
 
-    public int getSelectedRing() { return selectedRing; }
+    public int getSelectedRing()   { return selectedRing; }
     public int getSelectedSector() { return selectedSector; }
-    public boolean hasSelection() { return selectedRing != -1 && selectedSector != -1; }
+    public boolean hasSelection()  { return selectedRing != -1 && selectedSector != -1; }
 }

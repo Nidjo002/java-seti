@@ -1,13 +1,12 @@
 package com.seti.utils;
 
-import com.seti.engine.GameInitializer;
+
 import com.seti.engine.GameState;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.util.List;
 import java.util.Optional;
 
 public final class GameSerializerUtil {
@@ -18,10 +17,7 @@ public final class GameSerializerUtil {
     private static final ObjectInputFilter SAFE_FILTER =
             ObjectInputFilter.Config.createFilter(
                     "com.seti.**;" +
-                            "java.util.ArrayList;" +
-                            "java.util.HashMap;" +
-                            "java.util.List;" +
-                            "java.lang.String;" +
+                            "java.**;" +
                             "!*"
             );
 
@@ -50,7 +46,4 @@ public final class GameSerializerUtil {
         }
     }
 
-    public static GameState newGame() {
-        return new GameInitializer().initializeGame(List.of("Player 1", "Player 2"));
-    }
 }

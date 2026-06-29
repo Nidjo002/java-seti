@@ -28,18 +28,15 @@ public class BackgroundCanvas extends Canvas {
     private static final int SEED = 42;
     private static final double EMPTY_CELL_RATIO = 0.38;
     private static final double LABEL_OFFSET = 14.0;
-    private static final double DEFAULT_SIZE = 900.0;
+    private static final double CANVAS_WIDTH = 1400.0;
+    private static final double CANVAS_HEIGHT = 900.0;
 
     private final double[][] backgroundStars;
     private final Image sunImage;
     private final Map<PlanetType, Image> planetImages = new EnumMap<>(PlanetType.class);
 
     public BackgroundCanvas() {
-        this(DEFAULT_SIZE, DEFAULT_SIZE);
-    }
-
-    public BackgroundCanvas(double width, double height) {
-        super(width, height);
+        super(CANVAS_WIDTH, CANVAS_HEIGHT);
         this.backgroundStars = generateStars();
         this.sunImage = new Image(Objects.requireNonNull(
                 getClass().getResourceAsStream("/com/seti/images/sun.png")));
