@@ -4,9 +4,11 @@ import com.seti.engine.*;
 import com.seti.engine.action.*;
 import com.seti.model.GameConfig;
 import com.seti.model.Player;
+import com.seti.model.Probe;
 import com.seti.model.TrailType;
 import com.seti.ui.BackgroundCanvas;
 import com.seti.ui.DynamicBoardCanvas;
+import com.seti.ui.ProbeAnimator;
 import com.seti.utils.*;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
@@ -48,6 +50,7 @@ public class GameController {
 
     private GameEngine engine;
     private List<String> playerNames;
+    private ProbeAnimator probeAnimator;
     private final List<ReplayEntryUtil> replayLog = new ArrayList<>();
 
     private final LaunchAction launchAction = new LaunchAction();
@@ -62,6 +65,7 @@ public class GameController {
     @FXML
     public void initialize() {
         dynamicBoardCanvas.setOnCellSelected((ring, sector) -> updateButtons());
+        probeAnimator = new ProbeAnimator(dynamicBoardCanvas);
     }
 
     public void startNewGame(List<String> names) {
@@ -95,9 +99,7 @@ public class GameController {
         currentPlayerLabel.textProperty().bind(
                 Bindings.createStringBinding(
                         () -> state.getCurrentPlayer().getName(),
-                        state.currentPlayerIndexProperty()
-                )
-        );
+                        state.currentPlayerIndexProperty()));
         bindPlayerProperties(state.getCurrentPlayer());
     }
 
@@ -136,21 +138,60 @@ public class GameController {
         logArea.appendText(message + "\n");
     }
 
+    private void autoSave() {
+        AutoSaver.save(engine.getState(),
+                () -> log("Auto-saved."),
+                ex -> log("Auto-save failed: " + ex.getMessage()));
+    }
+
     private void executeAction(GameAction action) {
         int playerIndex = engine.getState().currentPlayerIndexProperty().get();
         var result = engine.executeAction(action);
         if (result.success()) {
             replayLog.add(new ReplayEntryUtil(playerIndex, action));
             XmlUtils.saveReplay(replayLog);
+            autoSave();
         }
         log(result.message());
         dynamicBoardCanvas.clearSelection();
         dynamicBoardCanvas.draw(engine.getState());
         bindPlayerProperties(engine.getState().getCurrentPlayer());
         updateButtons();
-        if (engine.getState().isGameOver()) {
-            showGameOver();
+        if (engine.getState().isGameOver()) showGameOver();
+    }
+
+    private void executeAnimatedAction(GameAction action) {
+        int playerIndex = engine.getState().currentPlayerIndexProperty().get();
+        Probe probe = engine.getState().getCurrentPlayer().getProbe();
+        int fromRing = probe.getProbeCurrentRing();
+        int fromSector = probe.getProbeCurrentSector();
+
+        var result = engine.executeAction(action);
+        log(result.message());
+
+        if (!result.success()) {
+            dynamicBoardCanvas.clearSelection();
+            dynamicBoardCanvas.draw(engine.getState());
+            updateButtons();
+            return;
         }
+
+        replayLog.add(new ReplayEntryUtil(playerIndex, action));
+        XmlUtils.saveReplay(replayLog);
+        autoSave();
+
+        Probe updatedProbe = engine.getState().getPlayers().get(playerIndex).getProbe();
+        int toRing = updatedProbe.getProbeCurrentRing();
+        int toSector = updatedProbe.getProbeCurrentSector();
+
+        dynamicBoardCanvas.clearSelection();
+        disableAllButtons();
+        probeAnimator.animate(engine.getState(), playerIndex, fromRing, fromSector, toRing, toSector, () -> {
+            dynamicBoardCanvas.draw(engine.getState());
+            bindPlayerProperties(engine.getState().getCurrentPlayer());
+            updateButtons();
+            if (engine.getState().isGameOver()) showGameOver();
+        });
     }
 
     private void showGameOver() {
@@ -180,18 +221,77 @@ public class GameController {
         }
     }
 
-    @FXML private void onLaunch()   { executeAction(launchAction); }
+    @FXML private void onLaunch() { executeAnimatedAction(launchAction); }
+
+    @FXML
+    private void onOrbit() {
+        int playerIndex = engine.getState().currentPlayerIndexProperty().get();
+        Probe probe = engine.getState().getCurrentPlayer().getProbe();
+        int ring = probe.getProbeCurrentRing();
+        int sector = probe.getProbeCurrentSector();
+
+        var result = engine.executeAction(orbitAction);
+        log(result.message());
+
+        if (!result.success()) {
+            dynamicBoardCanvas.clearSelection();
+            dynamicBoardCanvas.draw(engine.getState());
+            updateButtons();
+            return;
+        }
+
+        replayLog.add(new ReplayEntryUtil(playerIndex, orbitAction));
+        XmlUtils.saveReplay(replayLog);
+        autoSave();
+
+        dynamicBoardCanvas.clearSelection();
+        disableAllButtons();
+        probeAnimator.animateOrbit(engine.getState(), playerIndex, ring, sector, () -> {
+            dynamicBoardCanvas.draw(engine.getState());
+            bindPlayerProperties(engine.getState().getCurrentPlayer());
+            updateButtons();
+            if (engine.getState().isGameOver()) showGameOver();
+        });
+    }
+
     @FXML private void onMove() {
-        executeAction(new MoveAction(dynamicBoardCanvas.getSelectedRing(),
+        executeAnimatedAction(new MoveAction(dynamicBoardCanvas.getSelectedRing(),
                 dynamicBoardCanvas.getSelectedSector()));
     }
-    @FXML private void onOrbit()    { executeAction(orbitAction); }
-    @FXML private void onLand()     { executeAction(landAction); }
-    @FXML private void onScan()     { executeAction(scanAction); }
-    @FXML private void onAnalyze()  { executeAction(analyzeAction); }
-    @FXML private void onTradeEC()  { executeAction(tradeEC); }
-    @FXML private void onTradeCE()  { executeAction(tradeCE); }
-    @FXML private void onEndTurn()  { executeAction(endTurnAction); }
+
+    @FXML
+    private void onScan() {
+        Probe probe = engine.getState().getCurrentPlayer().getProbe();
+        int ring = probe.getProbeCurrentRing();
+        int sector = probe.getProbeCurrentSector();
+        int playerIndex = engine.getState().currentPlayerIndexProperty().get();
+
+        var result = engine.executeAction(scanAction);
+        log(result.message());
+
+        if (!result.success()) {
+            updateButtons();
+            return;
+        }
+
+        replayLog.add(new ReplayEntryUtil(playerIndex, scanAction));
+        XmlUtils.saveReplay(replayLog);
+        autoSave();
+
+        disableAllButtons();
+        probeAnimator.animateScan(engine.getState(), ring, sector, () -> {
+            dynamicBoardCanvas.draw(engine.getState());
+            bindPlayerProperties(engine.getState().getCurrentPlayer());
+            updateButtons();
+            if (engine.getState().isGameOver()) showGameOver();
+        });
+    }
+
+    @FXML private void onLand()    { executeAction(landAction); }
+    @FXML private void onAnalyze() { executeAction(analyzeAction); }
+    @FXML private void onTradeEC() { executeAction(tradeEC); }
+    @FXML private void onTradeCE() { executeAction(tradeCE); }
+    @FXML private void onEndTurn() { executeAction(endTurnAction); }
 
     @FXML private void onSave() {
         try {
@@ -225,7 +325,6 @@ public class GameController {
             dynamicBoardCanvas.draw(e.getState());
             bindPlayerProperties(e.getState().getCurrentPlayer());
         });
-        tl.setOnFinished(e -> log("Replay finished."));
         tl.play();
     }
 }

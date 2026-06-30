@@ -24,8 +24,7 @@ public class DynamicBoardCanvas extends Canvas {
 
     private static final double STAR_RADIUS = 26.0;
     private static final double PROBE_SIZE = 28.0;
-    private static final double CANVAS_WIDTH = 1400.0;
-    private static final double CANVAS_HEIGHT = 900.0;
+    private static final double DEFAULT_SIZE = 900.0;
 
     private final Image[] probeImages;
 
@@ -35,7 +34,11 @@ public class DynamicBoardCanvas extends Canvas {
     private BiConsumer<Integer, Integer> onCellSelected;
 
     public DynamicBoardCanvas() {
-        super(CANVAS_WIDTH, CANVAS_HEIGHT);
+        this(DEFAULT_SIZE, DEFAULT_SIZE);
+    }
+
+    public DynamicBoardCanvas(double width, double height) {
+        super(width, height);
         this.probeImages = new Image[]{
                 new Image(Objects.requireNonNull(
                         getClass().getResourceAsStream("/com/seti/images/probe1.png"))),
@@ -46,6 +49,10 @@ public class DynamicBoardCanvas extends Canvas {
     }
 
     public void draw(GameState state) {
+        draw(state, -1);
+    }
+
+    public void draw(GameState state, int excludePlayerIndex) {
         this.lastState = state;
         GraphicsContext gc = getGraphicsContext2D();
         gc.clearRect(0, 0, getWidth(), getHeight());
@@ -56,7 +63,7 @@ public class DynamicBoardCanvas extends Canvas {
                 + BoardGeometry.STAR_RING_OFFSET;
 
         drawStars(gc, state, cx, cy, starRingRadius);
-        drawProbes(gc, state, cx, cy);
+        drawProbes(gc, state, cx, cy, excludePlayerIndex);
         drawSelection(gc, cx, cy);
     }
 
@@ -99,8 +106,10 @@ public class DynamicBoardCanvas extends Canvas {
         gc.fillText(star.getTotalScans() + "/" + GameConfig.MAX_SCANS_PER_SECTOR, x, y + 18);
     }
 
-    private void drawProbes(GraphicsContext gc, GameState state, double cx, double cy) {
+    private void drawProbes(GraphicsContext gc, GameState state,
+                            double cx, double cy, int excludePlayerIndex) {
         for (int i = 0; i < state.getPlayers().size(); i++) {
+            if (i == excludePlayerIndex) continue;
             Player player = state.getPlayers().get(i);
             Probe probe = player.getProbe();
             if (probe.isProbeOnMap()) {
@@ -145,11 +154,9 @@ public class DynamicBoardCanvas extends Canvas {
         if (angle < 0) angle += 2 * Math.PI;
         int sector = (int) (angle / (2 * Math.PI / GameConfig.NUM_SECTORS)) + 1;
 
-        if (ring >= 1 && ring <= GameConfig.NUM_RINGS
-                && sector >= 1 && sector <= GameConfig.NUM_SECTORS) {
+        if (ring >= 1 && ring <= GameConfig.NUM_RINGS && sector >= 1 && sector <= GameConfig.NUM_SECTORS) {
             double[] pos = BoardGeometry.getCellPosition(ring, sector, cx, cy);
-            if (Math.hypot(event.getX() - pos[0], event.getY() - pos[1])
-                    <= BoardGeometry.CELL_RADIUS + 5) {
+            if (Math.hypot(event.getX() - pos[0], event.getY() - pos[1]) <= BoardGeometry.CELL_RADIUS + 5) {
                 selectedRing = ring;
                 selectedSector = sector;
                 draw(lastState);
@@ -171,7 +178,11 @@ public class DynamicBoardCanvas extends Canvas {
         this.onCellSelected = callback;
     }
 
-    public int getSelectedRing()   { return selectedRing; }
+    public Image getProbeImage(int playerIndex) {
+        return probeImages[playerIndex % probeImages.length];
+    }
+
+    public int getSelectedRing() { return selectedRing; }
     public int getSelectedSector() { return selectedSector; }
-    public boolean hasSelection()  { return selectedRing != -1 && selectedSector != -1; }
+    public boolean hasSelection() { return selectedRing != -1 && selectedSector != -1; }
 }

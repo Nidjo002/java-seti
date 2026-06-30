@@ -17,12 +17,15 @@ public final class BoardGeometry {
         return new double[]{cx + radius * Math.cos(angle), cy + radius * Math.sin(angle)};
     }
 
+    public static double[] getProbePosition(int ring, int sector, double cx, double cy) {
+        if (ring == 0) {
+            return new double[]{cx, cy};
+        }
+        return getCellPosition(ring, sector, cx, cy);
+    }
+
     public static double getSectorMidAngle(int sector) {
         double sectorAngle = (sector - 1) * 2 * Math.PI / GameConfig.NUM_SECTORS;
         return sectorAngle + Math.PI / GameConfig.NUM_SECTORS;
-    }
-
-    public static double getStarRingRadius(double cx, double cy) {
-        return SUN_RADIUS + GameConfig.NUM_RINGS * RING_GAP + STAR_RING_OFFSET;
     }
 }
