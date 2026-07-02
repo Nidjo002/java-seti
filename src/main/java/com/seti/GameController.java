@@ -51,7 +51,7 @@ public class GameController {
     private GameEngine engine;
     private List<String> playerNames;
     private ProbeAnimator probeAnimator;
-    private final List<ReplayEntryUtil> replayLog = new ArrayList<>();
+    private final List<ReplayEntry> replayLog = new ArrayList<>();
 
     private final LaunchAction launchAction = new LaunchAction();
     private final OrbitAction orbitAction = new OrbitAction();
@@ -148,7 +148,7 @@ public class GameController {
         int playerIndex = engine.getState().currentPlayerIndexProperty().get();
         var result = engine.executeAction(action);
         if (result.success()) {
-            replayLog.add(new ReplayEntryUtil(playerIndex, action));
+            replayLog.add(new ReplayEntry(playerIndex, action));
             XmlUtils.saveReplay(replayLog);
             autoSave();
         }
@@ -176,7 +176,7 @@ public class GameController {
             return;
         }
 
-        replayLog.add(new ReplayEntryUtil(playerIndex, action));
+        replayLog.add(new ReplayEntry(playerIndex, action));
         XmlUtils.saveReplay(replayLog);
         autoSave();
 
@@ -240,7 +240,7 @@ public class GameController {
             return;
         }
 
-        replayLog.add(new ReplayEntryUtil(playerIndex, orbitAction));
+        replayLog.add(new ReplayEntry(playerIndex, orbitAction));
         XmlUtils.saveReplay(replayLog);
         autoSave();
 
@@ -274,7 +274,7 @@ public class GameController {
             return;
         }
 
-        replayLog.add(new ReplayEntryUtil(playerIndex, scanAction));
+        replayLog.add(new ReplayEntry(playerIndex, scanAction));
         XmlUtils.saveReplay(replayLog);
         autoSave();
 
@@ -316,12 +316,12 @@ public class GameController {
     @FXML private void onDocumentation() { DocumentationUtils.openDocumentation(); }
 
     @FXML public void onWatchReplay() {
-        List<ReplayEntryUtil> entries = XmlUtils.readReplay();
+        List<ReplayEntry> entries = XmlUtils.readReplay();
         if (entries.isEmpty()) { log("No replay to watch."); return; }
         startNewGame(playerNames);
         disableAllButtons();
         log("Replaying " + entries.size() + " actions...");
-        Timeline tl = ReplayUtils.buildReplay(entries, engine, e -> {
+        Timeline tl = XmlUtils.buildReplay(entries, engine, e -> {
             dynamicBoardCanvas.draw(e.getState());
             bindPlayerProperties(e.getState().getCurrentPlayer());
         });

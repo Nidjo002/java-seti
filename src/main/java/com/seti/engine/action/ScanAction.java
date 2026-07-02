@@ -38,9 +38,9 @@ public final class ScanAction implements GameAction {
             state.getPlayers().stream()
                     .filter(p -> p.getName().equals(winnerName))
                     .findFirst()
-                    .ifPresent(p -> {
-                        p.addTrail(TrailType.PINK);
-                    });
+                    .ifPresent(p ->
+                        p.addTrail(TrailType.PINK)
+                    );
             pinkTrailAwarded = true;
         }
         return ActionResult.success(player.getName() + " scanned " + star.getName()

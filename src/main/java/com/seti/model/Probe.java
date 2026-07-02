@@ -37,7 +37,6 @@ public class Probe implements Serializable {
         return status == ProbeStatus.IN_FLIGHT;
     }
 
-    public ProbeStatus getProbeStatus() { return status; }
     public int getProbeCurrentRing() { return currentRing; }
     public int getProbeCurrentSector() { return currentSector; }
 }

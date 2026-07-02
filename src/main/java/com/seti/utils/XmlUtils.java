@@ -1,16 +1,11 @@
 package com.seti.utils;
 
-import com.seti.engine.action.AnalyzeAction;
-import com.seti.engine.action.EndTurnAction;
-import com.seti.engine.action.GameAction;
-import com.seti.engine.action.LandAction;
-import com.seti.engine.action.LaunchAction;
-import com.seti.engine.action.MoveAction;
-import com.seti.engine.action.OrbitAction;
-import com.seti.engine.action.ScanAction;
-import com.seti.engine.action.TradeAction;
-import com.seti.engine.action.TradeDirection;
+import com.seti.engine.GameEngine;
+import com.seti.engine.action.*;
 import com.seti.exception.XmlReplayException;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -26,10 +21,13 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public final class XmlUtils {
 
@@ -45,14 +43,33 @@ public final class XmlUtils {
     private static final String ATTR_RING = "ring";
     private static final String ATTR_SECTOR = "sector";
     private static final String ATTR_DIRECTION = "direction";
+    private static final double STEP_SECONDS = 1.0;
 
-    public static void saveReplay(List<ReplayEntryUtil> entries) {
+
+
+    public static Timeline buildReplay(List<ReplayEntry> entries, GameEngine engine,
+                                       Consumer<GameEngine> onStep) {
+        AtomicInteger index = new AtomicInteger(0);
+
+        Timeline timeline = new Timeline(new KeyFrame(
+                Duration.seconds(STEP_SECONDS),
+                event -> {
+                    ReplayEntry entry = entries.get(index.getAndIncrement());
+                    engine.executeAction(entry.action());
+                    onStep.accept(engine);
+                }));
+
+        timeline.setCycleCount(entries.size());
+        return timeline;
+    }
+
+    public static void saveReplay(List<ReplayEntry> entries) {
         try {
             Document doc = newDocumentBuilder().newDocument();
             Element root = doc.createElement(ROOT);
             doc.appendChild(root);
 
-            for (ReplayEntryUtil entry : entries) {
+            for (ReplayEntry entry : entries) {
                 root.appendChild(toElement(doc, entry));
             }
 
@@ -62,8 +79,8 @@ public final class XmlUtils {
         }
     }
 
-    public static List<ReplayEntryUtil> readReplay() {
-        List<ReplayEntryUtil> entries = new ArrayList<>();
+    public static List<ReplayEntry> readReplay() {
+        List<ReplayEntry> entries = new ArrayList<>();
         try {
             Document doc = newDocumentBuilder().parse(new File(REPLAY_FILE));
             NodeList nodes = doc.getDocumentElement().getElementsByTagName(ACTION);
@@ -77,7 +94,7 @@ public final class XmlUtils {
         return entries;
     }
 
-    private static Element toElement(Document doc, ReplayEntryUtil entry) {
+    private static Element toElement(Document doc, ReplayEntry entry) {
         Element el = doc.createElement(ACTION);
         el.setAttribute(ATTR_PLAYER, String.valueOf(entry.playerIndex()));
         switch (entry.action()) {
@@ -100,7 +117,7 @@ public final class XmlUtils {
         return el;
     }
 
-    private static ReplayEntryUtil toEntry(Element el) {
+    private static ReplayEntry toEntry(Element el) {
         int player = Integer.parseInt(el.getAttribute(ATTR_PLAYER));
         String type = el.getAttribute(ATTR_TYPE);
         GameAction action = switch (type) {
@@ -117,7 +134,7 @@ public final class XmlUtils {
                     TradeDirection.valueOf(el.getAttribute(ATTR_DIRECTION)));
             default -> throw new XmlReplayException("Unknown action type: " + type);
         };
-        return new ReplayEntryUtil(player, action);
+        return new ReplayEntry(player, action);
     }
 
     private static void writeDocument(Document doc) throws TransformerException {

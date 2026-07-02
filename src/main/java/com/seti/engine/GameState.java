@@ -97,5 +97,4 @@ public class GameState implements Serializable {
 
     public IntegerProperty currentRoundProperty() { return currentRound; }
     public IntegerProperty currentPlayerIndexProperty() { return currentPlayerIndex; }
-    public ObjectProperty<GamePhase> currentPhaseProperty() { return currentPhase; }
 }

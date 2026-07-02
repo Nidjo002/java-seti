@@ -47,8 +47,4 @@ public class Star implements Serializable {
 
     public String getName() { return type.getDisplayName(); }
     public int getSector() { return type.getSector(); }
-    public StarType getType() { return type; }
-    public Map<String, Integer> getScansByPlayer() {
-        return Collections.unmodifiableMap(scansByPlayer);
-    }
 }

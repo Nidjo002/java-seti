@@ -32,6 +32,4 @@ public class Planet implements Serializable {
 
     public String getName() { return type.getDisplayName(); }
     public PlanetType getType() { return type; }
-    public boolean getFirstOrbited() { return firstOrbited; }
-    public boolean getFirstLanded() { return firstLanded; }
 }

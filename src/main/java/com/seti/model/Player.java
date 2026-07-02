@@ -1,10 +1,12 @@
 package com.seti.model;
 
 import javafx.beans.property.*;
-import javafx.collections.*;
+
 
 import java.io.*;
 import java.util.List;
+
+import static javafx.collections.FXCollections.observableArrayList;
 
 public class Player implements Serializable {
 
@@ -26,7 +28,7 @@ public class Player implements Serializable {
         this.resources = new Resource();
         this.probe = new Probe();
         this.victoryPoints = new SimpleIntegerProperty(0);
-        this.trails = new SimpleListProperty<>(FXCollections.observableArrayList());
+        this.trails = new SimpleListProperty<>(observableArrayList());
     }
 
     @Serial
@@ -37,11 +39,11 @@ public class Player implements Serializable {
     }
 
     @Serial
-    @SuppressWarnings("unchecked")
+
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
         victoryPoints = new SimpleIntegerProperty(in.readInt());
-        trails = new SimpleListProperty<>(FXCollections.observableArrayList(
+        trails = new SimpleListProperty<>(observableArrayList(
                 (List<TrailType>) in.readObject()));
     }
 
@@ -65,8 +67,5 @@ public class Player implements Serializable {
     public Probe getProbe() { return probe; }
 
     public IntegerProperty victoryPointsProperty() { return victoryPoints; }
-    public int getVictoryPoints() { return victoryPoints.get(); }
-
     public ListProperty<TrailType> trailsProperty() { return trails; }
-    public List<TrailType> getTrails() { return trails.get(); }
 }

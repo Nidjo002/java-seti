@@ -63,7 +63,8 @@ public final class ProbeAnimator {
             public void handle(long now) {
                 if (startTime < 0) startTime = now;
                 long elapsed = now - startTime;
-                double x, y;
+                double x;
+                double y;
 
                 if (elapsed < ORBIT_DURATION_NANOS) {
                     double t = elapsed / (double) ORBIT_DURATION_NANOS;

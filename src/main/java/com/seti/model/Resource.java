@@ -47,14 +47,7 @@ public class Resource implements Serializable {
     public void addEnergy(int amount) { energy.set(energy.get() + amount); }
     public void addDataTokens(int amount) { dataTokens.set(dataTokens.get() + amount); }
 
-
-
     public IntegerProperty creditsProperty() { return credits; }
-    public int getCredits() { return credits.get(); }
-
     public IntegerProperty energyProperty() { return energy; }
-    public int getEnergy() { return energy.get(); }
-
     public IntegerProperty dataTokensProperty() { return dataTokens; }
-    public int getDataTokens() { return dataTokens.get(); }
 }

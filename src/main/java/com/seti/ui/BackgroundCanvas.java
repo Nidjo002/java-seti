@@ -13,7 +13,6 @@ import javafx.scene.paint.Stop;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +29,6 @@ public class BackgroundCanvas extends Canvas {
     private static final double LABEL_OFFSET = 14.0;
     private static final double CANVAS_WIDTH = 1400.0;
     private static final double CANVAS_HEIGHT = 900.0;
-
     private final double[][] backgroundStars;
     private final Image sunImage;
     private final Map<PlanetType, Image> planetImages = new EnumMap<>(PlanetType.class);
@@ -156,7 +154,6 @@ public class BackgroundCanvas extends Canvas {
         gc.strokeOval(cx - starRingRadius, cy - starRingRadius,
                 starRingRadius * 2, starRingRadius * 2);
     }
-
     private void drawSun(GraphicsContext gc, double cx, double cy) {
         for (int i = 3; i >= 1; i--) {
             double glowRadius = BoardGeometry.SUN_RADIUS + i * 14;
@@ -166,7 +163,6 @@ public class BackgroundCanvas extends Canvas {
         gc.drawImage(sunImage, cx - BoardGeometry.SUN_RADIUS, cy - BoardGeometry.SUN_RADIUS,
                 BoardGeometry.SUN_RADIUS * 2, BoardGeometry.SUN_RADIUS * 2);
     }
-
     private void drawCells(GraphicsContext gc, List<Cell> cells, double cx, double cy) {
         for (Cell cell : cells) {
             double[] pos = BoardGeometry.getCellPosition(cell.ring(), cell.sector(), cx, cy);
@@ -177,7 +173,6 @@ public class BackgroundCanvas extends Canvas {
             }
         }
     }
-
     private void drawPlanet(GraphicsContext gc, Cell cell, double x, double y) {
         double r = BoardGeometry.CELL_RADIUS;
         Image img = planetImages.get(cell.planet().getType());
@@ -192,7 +187,6 @@ public class BackgroundCanvas extends Canvas {
         gc.setTextAlign(TextAlignment.CENTER);
         gc.fillText(cell.planet().getName(), x, y + r + LABEL_OFFSET);
     }
-
     private void drawEmptyCell(GraphicsContext gc, double x, double y) {
         double r = BoardGeometry.CELL_RADIUS;
         gc.setFill(Color.rgb(70, 110, 190, 0.12));
